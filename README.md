@@ -1,1 +1,1 @@
-# Accessible-Population-Problem in Opencl
+# Accessible Population Problem in OpenCL
