@@ -1,0 +1,49 @@
+Nume: Ion Bogdan-Ionut
+Grupa: 332CB
+Facultatea de Automatica si Calculatoare, UPB
+
+Tema am implementat-o folosind OpenCL, alegand varianta brute-force pe care 
+am optimizat-o putin. Am pornit de la laboratorul 11.Trimit la device vectorii 
+de input si pe cel de output, iar apoi dupa terminarea prelucrarilor(asteptand 
+dupa un event), iau rezultatul in host. clEnqueueNDRangeKernel are work_dim = 1, 
+iar global_work_size este egal cu dimensiunea inputului, deci voi executa kernelul 
+de input_size ori. Deci, o iteratie prin toate orasele este reprezentata de 
+working threads din GPU. In acest caz, in device, am un for in care verific 
+distanta dintre orasul de la indicele globalsize[0] si toate celelalte orase 
+din input, fiind completata astfel brute-force-ul. De asemenea, am optimizat 
+in device accesarile la buffere folosind pointeri si am calculat populatia 
+accesibila intr-o variabila suma, iar apoi asignez acest rezultat la orasul 
+corespunzator din out_city_pop(indicele gid0).
+
+Vectorii de date(lat, lon, in_pop, out_pop) ii trimit la kernel creeand intai 
+un buffer object cu metoda clCreateBuffer() care contine un pointer la vector data 
+si cu optiunea CL_MEM_COPY_HOST_PTR care copiaza datele, pe care le voi utiliza 
+in device, de la adresa data de acel pointer in memorie. Apoi, copiez datele din 
+vectori in buffern objects folosind clEnqueueWriteBuffer(). Folosesc v.data() din 
+c++ pentru a obtine un pointer la vectorul de date. Folosesc un event pentru a 
+astpta terminarea prelucrarilor din device, urmand ca mai apoi sa preiau rezultatul 
+de la kernel.
+
+Tema a fost dezvoltata si testata pe coada hp-sl.q, pe platforma Platform 1 NVIDIA 
+Corporation OpenCL 1.2 CUDA 8.0.0, utilizand device-ul Device 1 Tesla K40m OpenCL 1.2 CUDA.
+
+Timpii obtinuti pe kernel sunt:
+- easy1: 0.003s
+- easy2: 0.014s
+- easy3: 0.29s
+- medium1: 2.738s
+- medium2: 4.9s
+- medium3: 5.21s
+- hard1: 10.78s
+- hard2: 11.098s
+- hard3: 14.708
+- extreme1: 50.535s
+
+Se observa o explozie a timpului intre hard3 si extreme1, dimensiunea inputului fiind dubla.
+
+De asemenea, am observat ca daca folosesc (ca si testare optionala) optiunea 
+"-cl-fast-relaxed-math" obtin timpi de 3x mai mici, dar apar diferente multe 
+incepand cu testele mai mari.
+
+De asemenea, am incercat initial sa lucrez cu work_dim = 2, kernelul fiind 
+executat de input_size ^ 2 ori, dar apareau de asemenea multe diferente.
